@@ -71,6 +71,33 @@
   become: true
   when: grub_cmdline_linux_default.split() | sort | list != grub_cmdline_linux_new | sort | list
 
+- name: Determine which parameters need removing from grub_cmdline_linux (not grub_cmdline_linux_default)
+  # We use a regex here so you can remove parameters regardless of their value, e.g to remove iommu=on you
+  # could use the regex: ^iommu=
+  ansible.builtin.set_fact:
+    grub_cmdline_linux_nondefault_remove: "{{ grub_cmdline_linux.split() | select('search', kernel_cmdline_nondefault_remove) | list }}"
+
+- name: Display parameters to be removed from grub_cmdline_linux (not grub_cmdline_linux_default)
+  ansible.builtin.debug:
+    var: grub_cmdline_linux_nondefault_remove
+
+- name: Updated kernel cmd line params for grub_cmdline_linux (not grub_cmdline_linux_default)
+  ansible.builtin.set_fact:
+    grub_cmdline_linux_nondefault_new: "{{ grub_cmdline_linux.split() | difference(grub_cmdline_linux_nondefault_remove) + kernel_cmdline | select() }}"
+
+- name: Display newly computed GRUB_CMDLINE_LINUX_DEFAULT
+  ansible.builtin.debug:
+    var: grub_cmdline_linux_nondefault_new
+
+- name: Set GRUB_CMDLINE_LINUX_DEFAULT in /etc/default/grub
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    regexp: ^GRUB_CMDLINE_LINUX=
+    line: GRUB_CMDLINE_LINUX_DEFAULT="{{ grub_cmdline_linux_nondefault_new | join(' ') }}"
+    backup: "{{ backup_grub_config_file }}"
+  become: true
+  when: grub_cmdline_linux.split() | sort | list != grub_cmdline_linux_nondefault_new | sort | list
+
 - name: Generate new grub-config (RedHat <= 8.x)
   ansible.builtin.command: grub2-mkconfig
   register: grub_mkconfig_result
