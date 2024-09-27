@@ -56,7 +56,7 @@
 
 - name: Updated kernel cmd line params
   ansible.builtin.set_fact:
-    grub_cmdline_linux_new: "{{ grub_cmdline_linux_default.split() | difference(grub_cmdline_linux_remove) + kernel_cmdline | select() }}"
+    grub_cmdline_linux_new: "{{ grub_cmdline_linux_default.split() |  community.general.lists_symmetric_difference(grub_cmdline_linux_remove) + kernel_cmdline | select() }}"
 
 - name: Display newly computed GRUB_CMDLINE_LINUX_DEFAULT
   ansible.builtin.debug:
@@ -65,7 +65,7 @@
 - name: Set GRUB_CMDLINE_LINUX_DEFAULT in /etc/default/grub
   ansible.builtin.lineinfile:
     path: /etc/default/grub
-    regexp: ^GRUB_CMDLINE_LINUX_DEFAULT
+    regexp: ^GRUB_CMDLINE_LINUX_DEFAULT=
     line: GRUB_CMDLINE_LINUX_DEFAULT="{{ grub_cmdline_linux_new | join(' ') }}"
     backup: "{{ backup_grub_config_file }}"
   become: true
@@ -83,17 +83,17 @@
 
 - name: Updated kernel cmd line params for grub_cmdline_linux (not grub_cmdline_linux_default)
   ansible.builtin.set_fact:
-    grub_cmdline_linux_nondefault_new: "{{ grub_cmdline_linux.split() | difference(grub_cmdline_linux_nondefault_remove) + kernel_cmdline | select() }}"
+    grub_cmdline_linux_nondefault_new: "{{ grub_cmdline_linux.split() |  community.general.lists_symmetric_difference(grub_cmdline_linux_nondefault_remove) | select() }}"
 
-- name: Display newly computed GRUB_CMDLINE_LINUX_DEFAULT
+- name: Display newly computed GRUB_CMDLINE_LINUX (not grub_cmdline_linux_default)
   ansible.builtin.debug:
     var: grub_cmdline_linux_nondefault_new
 
-- name: Set GRUB_CMDLINE_LINUX_DEFAULT in /etc/default/grub
+- name: Set GRUB_CMDLINE_LINUX (not grub_cmdline_linux_default) in /etc/default/grub
   ansible.builtin.lineinfile:
     path: /etc/default/grub
     regexp: ^GRUB_CMDLINE_LINUX=
-    line: GRUB_CMDLINE_LINUX_DEFAULT="{{ grub_cmdline_linux_nondefault_new | join(' ') }}"
+    line: GRUB_CMDLINE_LINUX="{{ grub_cmdline_linux_nondefault_new | join(' ') }}"
     backup: "{{ backup_grub_config_file }}"
   become: true
   when: grub_cmdline_linux.split() | sort | list != grub_cmdline_linux_nondefault_new | sort | list
