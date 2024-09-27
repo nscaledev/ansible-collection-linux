@@ -6,3 +6,5 @@ kernel_cmdline_sorted: "{{ kernel_cmdline | sort }}" # noqa var-naming[no-role-p
 
 # Should match on all of the the cmd line parameters that we want to remove
 kernel_cmdline_remove_regex: "{{ '(' ~ kernel_cmdline_remove | join('|') ~ ')' }}" # noqa var-naming[no-role-prefix]
+# same but for the grub_cmdline_linux and tnot the grub_cmdline_linux_default
+kernel_cmdline_nondefault_remove_regex: "{{ '(' ~ kernel_cmdline_nondefault_remove | join('|') ~ ')' }}" # noqa var-naming[no-role-prefix]
