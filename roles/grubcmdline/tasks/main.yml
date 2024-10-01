@@ -98,6 +98,15 @@
   become: true
   when: grub_cmdline_linux.split() | sort | list != grub_cmdline_linux_nondefault_new | sort | list
 
+- name: Generate new grub-config (RedHat <= 8.x)
+  ansible.builtin.command: grub2-mkconfig
+  register: grub_mkconfig_result
+  become: true
+  changed_when: false
+  when:
+    - ansible_facts.os_family == "RedHat"
+    - ansible_facts.distribution_version is version('9.0', '<')
+
 - name: Replace current grub config (RedHat <= 8.x)
   ansible.builtin.copy:
     backup: "{{ backup_grub_config_file }}"
@@ -112,15 +121,6 @@
     - /etc/grub2.cfg
     - /etc/grub2-efi.cfg
   notify: "{{ kernel_restart_handler }}"
-  when:
-    - ansible_facts.os_family == "RedHat"
-    - ansible_facts.distribution_version is version('9.0', '<')
-
-- name: Generate new grub-config (RedHat <= 8.x)
-  ansible.builtin.command: grub2-mkconfig
-  register: grub_mkconfig_result
-  become: true
-  changed_when: false
   when:
     - ansible_facts.os_family == "RedHat"
     - ansible_facts.distribution_version is version('9.0', '<')
