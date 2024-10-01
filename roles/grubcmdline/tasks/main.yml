@@ -114,7 +114,7 @@
   notify: "{{ kernel_restart_handler }}"
   when:
     - ansible_facts.os_family == "RedHat"
-    - ansible_facts.distribution_version is version('8.0', '<=')
+    - ansible_facts.distribution_version is version('9.0', '<')
 
 - name: Generate new grub-config (RedHat <= 8.x)
   ansible.builtin.command: grub2-mkconfig
@@ -123,7 +123,7 @@
   changed_when: false
   when:
     - ansible_facts.os_family == "RedHat"
-    - ansible_facts.distribution_version is version('8.0', '<=')
+    - ansible_facts.distribution_version is version('9.0', '<')
 
 - name: Generate new grub config (Ubuntu/Debian) # noqa: no-changed-when
   ansible.builtin.command: /usr/sbin/update-grub
